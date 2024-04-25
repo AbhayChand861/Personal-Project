@@ -1,0 +1,205 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Random;
+
+public class WaterGunGameGUI extends JFrame {
+    private JTextField player1WaterField;
+    private JTextField player2WaterField;
+    private JButton player1FillButton;
+    private JButton player1ShootButton;
+    private JButton player2FillButton;
+    private JButton player2ShootButton;
+    private JTextArea messageArea;
+
+    private String player1Name;
+    private String player2Name;
+    private int player1Water;
+    private int player2Water;
+    private boolean isPlayer1Turn;
+    private Random random;
+
+    private int rounds;
+    private int player1Wins;
+    private int player2Wins;
+
+    public WaterGunGameGUI() {
+        super("Water Gun Game");
+
+        player1Name = JOptionPane.showInputDialog("Enter Player 1's name:");
+        player2Name = JOptionPane.showInputDialog("Enter Player 2's name:");
+
+        player1Water = 100;
+        player2Water = 100;
+        isPlayer1Turn = true;
+        random = new Random();
+
+        rounds = 0;
+        player1Wins = 0;
+        player2Wins = 0;
+
+        setLayout(new BorderLayout());
+
+        JPanel playerPanel = new JPanel(new GridLayout(2, 2));
+        player1WaterField = new JTextField(player1Name + "'s water: " + player1Water);
+        player1WaterField.setEditable(false);
+        player1FillButton = new JButton("Fill water gun");
+        player1ShootButton = new JButton("Shoot");
+        player2WaterField = new JTextField(player2Name + "'s water: " + player2Water);
+        player2WaterField.setEditable(false);
+        player2FillButton = new JButton("Fill water gun");
+        player2ShootButton = new JButton("Shoot");
+
+        playerPanel.add(player1WaterField);
+        playerPanel.add(player1FillButton);
+        playerPanel.add(player1ShootButton);
+        playerPanel.add(player2WaterField);
+        playerPanel.add(player2FillButton);
+        playerPanel.add(player2ShootButton);
+
+        messageArea = new JTextArea();
+        messageArea.setEditable(false);
+
+        add(playerPanel, BorderLayout.NORTH);
+        add(new JScrollPane(messageArea), BorderLayout.CENTER);
+
+        player1FillButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fillWater(isPlayer1Turn ? player1Name : player2Name);
+            }
+        });
+
+        player2FillButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fillWater(isPlayer1Turn ? player1Name : player2Name);
+            }
+        });
+
+        player1ShootButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                player1Clicked();
+            }
+        });
+
+        player2ShootButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                player2Clicked();
+            }
+        });
+
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setVisible(true);
+
+        startRound();
+    }
+
+    private void fillWater(String playerName) {
+        if (playerName.equals(player1Name)) {
+            player1Water = 100;
+        } else {
+            player2Water = 100;
+        }
+        updateUI();
+        showMessage(playerName + " filled their water gun.");
+    }
+
+    private void player1Clicked() {
+        shoot(player1Name, player2Name);
+    }
+
+    private void player2Clicked() {
+        shoot(player2Name, player1Name);
+    }
+
+    private void shoot(String shooter, String target) {
+        int shotAmount = random.nextInt(21);
+        if (target.equals(player1Name)) {
+            player1Water -= shotAmount;
+        } else {
+            player2Water -= shotAmount;
+        }
+        updateUI();
+        showMessage(shooter + " shot " + target + " with " + shotAmount + " water!");
+
+        if (player1Water <= 0 || player2Water <= 0) {
+            endRound();
+        }
+    }
+
+    private void updateUI() {
+        player1WaterField.setText(player1Name + "'s water: " + player1Water);
+        player2WaterField.setText(player2Name + "'s water: " + player2Water);
+    }
+
+    private void showMessage(String message) {
+        messageArea.append(message + "\n");
+    }
+
+    private void startRound() {
+        rounds++;
+        showMessage("\nRound " + rounds + " starts!");
+    }
+
+    private void endRound() {
+        if (player1Water <= 0) {
+            player2Wins++;
+            showMessage(player2Name + " wins Round " + rounds + "!");
+        } else {
+            player1Wins++;
+            showMessage(player1Name + " wins Round " + rounds + "!");
+        }
+
+        if (rounds == 3) {
+            endGame();
+        } else {
+            resetRound();
+            startRound();
+        }
+    }
+
+    private void resetRound() {
+        player1Water = 100;
+        player2Water = 100;
+        updateUI();
+    }
+
+    private void endGame() {
+        String winner;
+        if (player1Wins > player2Wins) {
+            winner = player1Name;
+        } else if (player2Wins > player1Wins) {
+            winner = player2Name;
+        } else {
+            winner = "It's a tie!";
+        }
+
+        showMessage("\nGame Over!");
+        showMessage("Winner: " + winner + " (" + player1Wins + " rounds won)");
+        disableButtons();
+    }
+
+    private void disableButtons() {
+        player1FillButton.setEnabled(false);
+        player1ShootButton.setEnabled(false);
+        player2FillButton.setEnabled(false);
+        player2ShootButton.setEnabled(false);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new WaterGunGameGUI();
+            }
+        });
+    }
+}
